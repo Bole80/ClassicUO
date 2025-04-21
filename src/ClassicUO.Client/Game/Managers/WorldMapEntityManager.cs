@@ -199,6 +199,10 @@ namespace ClassicUO.Game.Managers
 
         public void RequestServerPartyGuildInfo(bool force = false)
         {
+            return;
+            /*
+             *  Funktion wird vom Siebenwind Server nicht unterstützt, sorgt für Client Crash - deshalb deaktiviert
+             * 
             if (!force && !Enabled)
             {
                 return;
@@ -235,6 +239,7 @@ namespace ClassicUO.Game.Managers
                     }
                 }
             }
+            */
         }
 
         public void Clear()
