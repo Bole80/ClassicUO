@@ -3218,8 +3218,8 @@ namespace ClassicUO.Network
                         Y = 100
                     }
                 );
-
-                NetClient.Socket.Send_BookPageDataRequest(serial, 1);
+                // Schmutziger Fix ob die Zerstörung von IG Büchern auf Siebenwind zu verhindern
+                //NetClient.Socket.Send_BookPageDataRequest(serial, 1);
             }
             else
             {

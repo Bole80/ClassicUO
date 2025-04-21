@@ -365,6 +365,26 @@ namespace ClassicUO.Game.UI.Gumps.Login
             int htmlX = 130;
             int htmlY = 442;
 
+            
+            Add
+            (
+                new HtmlControl
+                (
+                    500,
+                    htmlY,
+                    150,
+                    15,
+                    false,
+                    false,
+                    false,
+                    "<body link=\"#FFFF4000\" vlink=\"#FFFF4000\" ><a href=\"http://schnellerwind.mind.de/accounts/index.php\">Accountbereich",
+                    0x32,
+                    true,
+                    isunicode: true,
+                    style: FontStyle.BlackBorder
+                )
+            );
+           
 
             Add
             (
@@ -377,27 +397,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
                     false,
                     false,
                     false,
-                    "<body link=\"#FF00FF00\" vlink=\"#FF00FF00\" ><a href=\"https://www.classicuo.eu/support.php\">Support ClassicUO!",
-                    0x32,
-                    true,
-                    isunicode: true,
-                    style: FontStyle.BlackBorder
-                )
-            );
-
-
-            Add
-            (
-                new HtmlControl
-                (
-                    505,
-                    htmlY,
-                    100,
-                    15,
-                    false,
-                    false,
-                    false,
-                    "<body link=\"#FF00FF00\" vlink=\"#FF00FF00\" ><a href=\"https://www.classicuo.eu\">Website",
+                    "<body link=\"#FF00FF00\" vlink=\"#FF00FF00\" ><a href=\"https://www.siebenwind.de/\">Siebenwind Webseite",
                     0x32,
                     true,
                     isunicode: true,
@@ -409,14 +409,14 @@ namespace ClassicUO.Game.UI.Gumps.Login
             (
                 new HtmlControl
                 (
-                    505,
+                    htmlX,
                     htmlY + 19,
-                    100,
+                    150,
                     15,
                     false,
                     false,
                     false,
-                    "<body link=\"#FF00FF00\" vlink=\"#FF00FF00\" ><a href=\"https://discord.gg/VdyCpjQ\">Join Discord",
+                    "<body link=\"#FF0040FF\" vlink=\"#FF0040FF\" ><a href=\"https://discordapp.com/invite/MUy9295B\">Siebenwind Discord",
                     0x32,
                     true,
                     isunicode: true,
