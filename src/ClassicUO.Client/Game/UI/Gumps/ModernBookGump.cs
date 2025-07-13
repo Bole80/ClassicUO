@@ -230,6 +230,12 @@ namespace ClassicUO.Game.UI.Gumps
             ActivePage = 1;
             UpdatePageButtonVisibility();
 
+            if (IsEditable)
+            {
+                _bookPage.SetKeyboardFocus();
+                _bookPage.CaretIndex = 0;
+            }
+
             Client.Game.Audio.PlaySound(0x0055);
         }
 
@@ -409,10 +415,14 @@ namespace ClassicUO.Game.UI.Gumps
                         }
                         else if (_bookPage._caretPos.Y <= _bookPage.Height)
                         {
-                            if (_bookPage._caretPage + 2 < _bookPage._pagesChanged.Length)
+                            // Nur weiterblättern, wenn Text vorhanden ist
+                            if (!string.IsNullOrEmpty(_bookPage.Text) && _bookPage.Text.Trim().Length > 0)
                             {
-                                _bookPage._focusPage = _bookPage._caretPage++;
-                                SetActivePage(_bookPage._caretPage / 2 + 2);
+                                if (_bookPage._caretPage + 2 < _bookPage._pagesChanged.Length)
+                                {
+                                    _bookPage._focusPage = _bookPage._caretPage++;
+                                    SetActivePage(_bookPage._caretPage / 2 + 2);
+                                }
                             }
                         }
                     }
@@ -517,8 +527,8 @@ namespace ClassicUO.Game.UI.Gumps
 
         private class StbPageTextBox : StbTextBox
         {
-            private static readonly StringBuilder _sb = new StringBuilder();
-            private static string[] _handler;
+            private readonly StringBuilder _sb = new StringBuilder();
+            private string[] _handler;
             private readonly ModernBookGump _gump;
 
             public StbPageTextBox
