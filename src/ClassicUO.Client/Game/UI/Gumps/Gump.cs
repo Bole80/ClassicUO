@@ -137,7 +137,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override void OnButtonClick(int buttonID)
         {
-            if (!IsDisposed && LocalSerial != 0)
+            if (!IsDisposed)
             {
                 List<uint> switches = new List<uint>();
                 List<Tuple<ushort, string>> entries = new List<Tuple<ushort, string>>();
@@ -148,33 +148,32 @@ namespace ClassicUO.Game.UI.Gumps
                     {
                         case Checkbox checkbox when checkbox.IsChecked:
                             switches.Add(control.LocalSerial);
-
                             break;
-
                         case StbTextBox textBox:
-                            entries.Add(new Tuple<ushort, string>((ushort) textBox.LocalSerial, textBox.Text));
-
+                            entries.Add(new Tuple<ushort, string>((ushort)textBox.LocalSerial, textBox.Text));
                             break;
                     }
                 }
 
-                GameActions.ReplyGump
-                (
-                    LocalSerial,
-                    // Seems like MasterGump serial does not work as expected.
-                    /*MasterGumpSerial != 0 ? MasterGumpSerial :*/ ServerSerial,
-                    buttonID,
-                    switches.ToArray(),
-                    entries.ToArray()
-                );
+                if (LocalSerial != 0)
+                {
+                    GameActions.ReplyGump
+                    (
+                        LocalSerial,
+                        /*MasterGumpSerial != 0 ? MasterGumpSerial :*/ ServerSerial,
+                        buttonID,
+                        switches.ToArray(),
+                        entries.ToArray()
+                    );
 
-                if (CanMove)
-                {
-                    UIManager.SavePosition(ServerSerial, Location);
-                }
-                else
-                {
-                    UIManager.RemovePosition(ServerSerial);
+                    if (CanMove)
+                    {
+                        UIManager.SavePosition(ServerSerial, Location);
+                    }
+                    else
+                    {
+                        UIManager.RemovePosition(ServerSerial);
+                    }
                 }
 
                 Dispose();
@@ -198,8 +197,25 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override void ChangePage(int pageIndex)
         {
-            // For a gump, Page is the page that is drawing.
             ActivePage = pageIndex;
+            UpdateSizeToActivePage();
+        }
+
+        private void UpdateSizeToActivePage()
+        {
+            int maxRight = 0, maxBottom = 0;
+            foreach (Control c in Children)
+            {
+                if (c.Page == 0 || c.Page == ActivePage)
+                {
+                    int right = c.X + c.Width;
+                    int bottom = c.Y + c.Height;
+                    if (right > maxRight) maxRight = right;
+                    if (bottom > maxBottom) maxBottom = bottom;
+                }
+            }
+            Width = maxRight;
+            Height = maxBottom;
         }
     }
 }
