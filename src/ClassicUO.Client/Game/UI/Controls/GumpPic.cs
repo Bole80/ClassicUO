@@ -19,7 +19,8 @@ namespace ClassicUO.Game.UI.Controls
             AcceptMouseInput = true;
         }
 
-        public ushort Graphic
+        // HINWEIS: 'virtual' hinzugefügt, damit abgeleitete Klassen (z.B. GumpPic) überschreiben können.
+        public virtual ushort Graphic
         {
             get => _graphic;
             set
@@ -31,7 +32,6 @@ namespace ClassicUO.Game.UI.Controls
                 if (gumpInfo.Texture == null)
                 {
                     Dispose();
-
                     return;
                 }
 
@@ -45,26 +45,16 @@ namespace ClassicUO.Game.UI.Controls
         public override bool Contains(int x, int y)
         {
             ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(_graphic);
-
             if (gumpInfo.Texture == null)
-            {
                 return false;
-            }
 
             if (Client.Game.UO.Gumps.PixelCheck(Graphic, x - Offset.X, y - Offset.Y))
-            {
                 return true;
-            }
 
             for (int i = 0; i < Children.Count; i++)
             {
-                Control c = Children[i];
-
-                // might be wrong x, y. They should be calculated by position
-                if (c.Contains(x, y))
-                {
+                if (Children[i].Contains(x, y))
                     return true;
-                }
             }
 
             return false;
@@ -73,6 +63,10 @@ namespace ClassicUO.Game.UI.Controls
 
     internal class GumpPic : GumpPicBase
     {
+        private int _baseWidth;
+        private int _baseHeight;
+        private float _scale = 1f;
+
         public GumpPic(int x, int y, ushort graphic, ushort hue)
         {
             X = x;
@@ -103,29 +97,86 @@ namespace ClassicUO.Game.UI.Controls
         public bool IsPartialHue { get; set; }
         public bool ContainsByBounds { get; set; }
 
+        public float Scale
+        {
+            get => _scale;
+            set
+            {
+                if (value <= 0) value = 1f;
+                if (_scale != value)
+                {
+                    _scale = value;
+                    ApplyScale();
+                }
+            }
+        }
+
+        public override ushort Graphic
+        {
+            get => base.Graphic;
+            set
+            {
+                base.Graphic = value;
+                // Speichere Basisgröße nach Setzen der Grafik
+                _baseWidth = Width;
+                _baseHeight = Height;
+                ApplyScale();
+            }
+        }
+
+        private void ApplyScale()
+        {
+            if (_baseWidth == 0 || _baseHeight == 0)
+                return;
+
+            Width = (int)(_baseWidth * _scale);
+            Height = (int)(_baseHeight * _scale);
+        }
+
         public override bool Contains(int x, int y)
         {
-            return ContainsByBounds || base.Contains(x, y);
+            if (ContainsByBounds)
+            {
+                return x >= 0 && y >= 0 && x < Width && y < Height;
+            }
+
+            if (_scale != 1f && _baseWidth > 0 && _baseHeight > 0)
+            {
+                // Auf unskalierte Textur-Koordinaten zurückrechnen
+                int unscaledX = (int)(x / _scale);
+                int unscaledY = (int)(y / _scale);
+
+                ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(Graphic);
+                if (gumpInfo.Texture == null)
+                    return false;
+
+                if (Client.Game.UO.Gumps.PixelCheck(Graphic, unscaledX - Offset.X, unscaledY - Offset.Y))
+                    return true;
+
+                // Kinder normal testen (sie bekommen bereits die skalierten x,y)
+                for (int i = 0; i < Children.Count; i++)
+                {
+                    if (Children[i].Contains(x, y))
+                        return true;
+                }
+
+                return false;
+            }
+
+            return base.Contains(x, y);
         }
 
         private static ushort TransformHue(ushort hue)
         {
             if (hue <= 2)
-            {
                 hue = 0;
-            }
-
-            //if (hue < 2)
-            //    hue = 1;
             return hue;
         }
 
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
         {
             if (IsDisposed)
-            {
                 return false;
-            }
 
             Vector3 hueVector = ShaderHueTranslator.GetHueVector(Hue, IsPartialHue, Alpha, true);
 
@@ -133,6 +184,7 @@ namespace ClassicUO.Game.UI.Controls
 
             if (gumpInfo.Texture != null)
             {
+                // Zeichnen direkt auf skalierte Zielrechteckgröße (Width/Height bereits skaliert)
                 batcher.Draw(
                     gumpInfo.Texture,
                     new Rectangle(x, y, Width, Height),
@@ -159,7 +211,6 @@ namespace ClassicUO.Game.UI.Controls
             if (button == MouseButtonType.Left)
             {
                 NetClient.Socket.Send_VirtueGumpResponse(_world.Player, Graphic);
-
                 return true;
             }
 
@@ -210,9 +261,7 @@ namespace ClassicUO.Game.UI.Controls
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
         {
             if (IsDisposed)
-            {
                 return false;
-            }
 
             Vector3 hueVector = ShaderHueTranslator.GetHueVector(Hue, false, Alpha, true);
 

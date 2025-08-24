@@ -16,6 +16,8 @@ namespace ClassicUO.Game.UI.Controls
 {
     internal class PaperDollInteractable : Control
     {
+        private const float PAPERDOLL_SCALE = 2f; // Fester Skalierungsfaktor
+
         private static readonly Layer[] _layerOrder =
         {
             Layer.Cloak,
@@ -93,7 +95,6 @@ namespace ClassicUO.Game.UI.Controls
             if (_updateUI)
             {
                 UpdateUI();
-
                 _updateUI = false;
             }
         }
@@ -107,120 +108,91 @@ namespace ClassicUO.Game.UI.Controls
         private void UpdateUI()
         {
             if (IsDisposed)
-            {
                 return;
-            }
 
             Mobile mobile = _paperDollGump.World.Mobiles.Get(LocalSerial);
 
             if (mobile == null || mobile.IsDestroyed)
             {
                 Dispose();
-
                 return;
             }
 
             Clear();
 
-            // Add the base gump - the semi-naked paper doll.
+            // Basis-Gump (halb nackt)
             ushort body;
             ushort hue = mobile.Hue;
 
             if (mobile.Graphic == 0x0191 || mobile.Graphic == 0x0193)
-            {
                 body = 0x000D;
-            }
             else if (mobile.Graphic == 0x025D)
-            {
                 body = 0x000E;
-            }
             else if (mobile.Graphic == 0x025E)
-            {
                 body = 0x000F;
-            }
             else if (mobile.Graphic == 0x029A || mobile.Graphic == 0x02B6)
-            {
                 body = 0x029A;
-            }
             else if (mobile.Graphic == 0x029B || mobile.Graphic == 0x02B7)
-            {
                 body = 0x0299;
-            }
             else if (mobile.Graphic == 0x04E5)
-            {
                 body = 0xC835;
-            }
             else if (mobile.Graphic == 0x03DB)
             {
                 body = 0x000C;
                 hue = 0x03EA;
             }
             else if (mobile.IsFemale)
-            {
                 body = 0x000D;
-            }
             else
-            {
                 body = 0x000C;
-            }
 
-            // body
-            Add(new GumpPic(0, 0, body, hue) { IsPartialHue = true });
+            var bodyPic = new GumpPic(0, 0, body, hue) { IsPartialHue = true, Scale = PAPERDOLL_SCALE };
+            Add(bodyPic);
 
             if (mobile.Graphic == 0x03DB)
             {
-                Add(
-                    new GumpPic(0, 0, 0xC72B, mobile.Hue)
-                    {
-                        AcceptMouseInput = true,
-                        IsPartialHue = true
-                    }
-                );
+                var gargPic = new GumpPic(0, 0, 0xC72B, mobile.Hue)
+                {
+                    AcceptMouseInput = true,
+                    IsPartialHue = true,
+                    Scale = PAPERDOLL_SCALE
+                };
+                Add(gargPic);
             }
 
-            // equipment
+            // Ausrüstung
             Item equipItem = mobile.FindItemByLayer(Layer.Cloak);
             Item arms = mobile.FindItemByLayer(Layer.Arms);
 
             bool switch_arms_with_torso = false;
 
             if (arms != null)
-            {
                 switch_arms_with_torso = arms.Graphic == 0x1410 || arms.Graphic == 0x1417;
-            }
             else if (
                 HasFakeItem
                 && Client.Game.UO.GameCursor.ItemHold.Enabled
                 && !Client.Game.UO.GameCursor.ItemHold.IsFixedPosition
                 && (byte)Layer.Arms == Client.Game.UO.GameCursor.ItemHold.ItemData.Layer
             )
-            {
                 switch_arms_with_torso =
                     Client.Game.UO.GameCursor.ItemHold.Graphic == 0x1410
                     || Client.Game.UO.GameCursor.ItemHold.Graphic == 0x1417;
-            }
 
             Layer[] layers;
 
             if (equipItem != null)
-            {
                 layers = equipItem.ItemData.IsContainer ? _layerOrder_quiver_fix : _layerOrder;
-            }
             else if (
                 HasFakeItem
                 && Client.Game.UO.GameCursor.ItemHold.Enabled
                 && !Client.Game.UO.GameCursor.ItemHold.IsFixedPosition
                 && (byte)Layer.Cloak == Client.Game.UO.GameCursor.ItemHold.ItemData.Layer
             )
-            {
                 layers = Client.Game.UO.GameCursor.ItemHold.ItemData.IsContainer
                     ? _layerOrder_quiver_fix
                     : _layerOrder;
-            }
             else
-            {
                 layers = _layerOrder;
-            }
 
             for (int i = 0; i < layers.Length; i++)
             {
@@ -229,13 +201,9 @@ namespace ClassicUO.Game.UI.Controls
                 if (switch_arms_with_torso)
                 {
                     if (layer == Layer.Arms)
-                    {
                         layer = Layer.Torso;
-                    }
                     else if (layer == Layer.Torso)
-                    {
                         layer = Layer.Arms;
-                    }
                 }
 
                 equipItem = mobile.FindItemByLayer(layer);
@@ -243,9 +211,7 @@ namespace ClassicUO.Game.UI.Controls
                 if (equipItem != null)
                 {
                     if (Mobile.IsCovered(mobile, layer))
-                    {
                         continue;
-                    }
 
                     ushort id = GetAnimID(
                         mobile.Graphic,
@@ -254,27 +220,27 @@ namespace ClassicUO.Game.UI.Controls
                         mobile.IsFemale
                     );
 
-                    Add(
-                        new GumpPicEquipment(
-                            _paperDollGump,
-                            equipItem.Serial,
-                            0,
-                            0,
-                            id,
-                            (ushort)(equipItem.Hue & 0x3FFF),
-                            layer
-                        )
-                        {
-                            AcceptMouseInput = true,
-                            IsPartialHue = equipItem.ItemData.IsPartialHue,
-                            CanLift =
-                                _paperDollGump.World.InGame
-                                && !_paperDollGump.World.Player.IsDead
-                                && layer != Layer.Beard
-                                && layer != Layer.Hair
-                                && (_paperDollGump.CanLift || LocalSerial == _paperDollGump.World.Player)
-                        }
-                    );
+                    var gp = new GumpPicEquipment(
+                        _paperDollGump,
+                        equipItem.Serial,
+                        0,
+                        0,
+                        id,
+                        (ushort)(equipItem.Hue & 0x3FFF),
+                        layer
+                    )
+                    {
+                        AcceptMouseInput = true,
+                        IsPartialHue = equipItem.ItemData.IsPartialHue,
+                        CanLift =
+                            _paperDollGump.World.InGame
+                            && !_paperDollGump.World.Player.IsDead
+                            && layer != Layer.Beard
+                            && layer != Layer.Hair
+                            && (_paperDollGump.CanLift || LocalSerial == _paperDollGump.World.Player),
+                        Scale = PAPERDOLL_SCALE
+                    };
+                    Add(gp);
                 }
                 else if (
                     HasFakeItem
@@ -291,22 +257,22 @@ namespace ClassicUO.Game.UI.Controls
                         mobile.IsFemale
                     );
 
-                    Add(
-                        new GumpPicEquipment(
-                            _paperDollGump,
-                            0,
-                            0,
-                            0,
-                            id,
-                            (ushort)(Client.Game.UO.GameCursor.ItemHold.Hue & 0x3FFF),
-                            Client.Game.UO.GameCursor.ItemHold.Layer
-                        )
-                        {
-                            AcceptMouseInput = true,
-                            IsPartialHue = Client.Game.UO.GameCursor.ItemHold.IsPartialHue,
-                            Alpha = 0.5f
-                        }
-                    );
+                    var fake = new GumpPicEquipment(
+                        _paperDollGump,
+                        0,
+                        0,
+                        0,
+                        id,
+                        (ushort)(Client.Game.UO.GameCursor.ItemHold.Hue & 0x3FFF),
+                        Client.Game.UO.GameCursor.ItemHold.Layer
+                    )
+                    {
+                        AcceptMouseInput = true,
+                        IsPartialHue = Client.Game.UO.GameCursor.ItemHold.IsPartialHue,
+                        Alpha = 0.5f,
+                        Scale = PAPERDOLL_SCALE
+                    };
+                    Add(fake);
                 }
             }
 
@@ -318,66 +284,59 @@ namespace ClassicUO.Game.UI.Controls
                     equipItem.ItemData.AnimID + Constants.MALE_GUMP_OFFSET
                 );
 
-                // If player, apply backpack skin
                 if (mobile.Serial == _paperDollGump.World.Player.Serial)
                 {
                     var gump = Client.Game.UO.Gumps;
-
                     switch (ProfileManager.CurrentProfile.BackpackStyle)
                     {
                         case 1:
                             if (gump.GetGump(0x777B).Texture != null)
-                            {
-                                backpackGraphic = 0x777B; // Suede Backpack
-                            }
-
+                                backpackGraphic = 0x777B;
                             break;
                         case 2:
                             if (gump.GetGump(0x777C).Texture != null)
-                            {
-                                backpackGraphic = 0x777C; // Polar Bear Backpack
-                            }
-
+                                backpackGraphic = 0x777C;
                             break;
                         case 3:
                             if (gump.GetGump(0x777D).Texture != null)
-                            {
-                                backpackGraphic = 0x777D; // Ghoul Skin Backpack
-                            }
-
+                                backpackGraphic = 0x777D;
                             break;
                         default:
                             if (gump.GetGump(0xC4F6).Texture != null)
-                            {
-                                backpackGraphic = 0xC4F6; // Default Backpack
-                            }
-
+                                backpackGraphic = 0xC4F6;
                             break;
                     }
                 }
 
                 int bx = 0;
-
                 if (_paperDollGump.World.ClientFeatures.PaperdollBooks)
-                {
                     bx = 6;
-                }
 
-                Add(
-                    new GumpPicEquipment(
-                        _paperDollGump,
-                        equipItem.Serial,
-                        -bx,
-                        0,
-                        backpackGraphic,
-                        (ushort)(equipItem.Hue & 0x3FFF),
-                        Layer.Backpack
-                    )
-                    {
-                        AcceptMouseInput = true
-                    }
-                );
+                var bp = new GumpPicEquipment(
+                    _paperDollGump,
+                    equipItem.Serial,
+                    -bx,
+                    0,
+                    backpackGraphic,
+                    (ushort)(equipItem.Hue & 0x3FFF),
+                    Layer.Backpack
+                )
+                {
+                    AcceptMouseInput = true,
+                    Scale = PAPERDOLL_SCALE
+                };
+                Add(bp);
             }
+
+            // Größe des Containers anpassen (einfach Bounding Box ermitteln)
+            int maxW = 0, maxH = 0;
+            foreach (var c in Children)
+            {
+                if (c.X + c.Width > maxW) maxW = c.X + c.Width;
+                if (c.Y + c.Height > maxH) maxH = c.Y + c.Height;
+            }
+            Width = maxW;
+            Height = maxH;
         }
 
         public void RequestUpdate()
@@ -390,13 +349,13 @@ namespace ClassicUO.Game.UI.Controls
             int offset = isfemale ? Constants.FEMALE_GUMP_OFFSET : Constants.MALE_GUMP_OFFSET;
 
             if (
-                    Client.Game.UO.Version >= ClientVersion.CV_7000
-                    && animID == 0x03CA // graphic for dead shroud
-                    && (mobileGraphic == 0x02B7 || mobileGraphic == 0x02B6)
-                ) // dead gargoyle graphics
-                {
-                    animID = 0x0223;
-                }
+                Client.Game.UO.Version >= ClientVersion.CV_7000
+                && animID == 0x03CA
+                && (mobileGraphic == 0x02B7 || mobileGraphic == 0x02B6)
+            )
+            {
+                animID = 0x0223;
+            }
 
             Client.Game.UO.Animations.ConvertBodyIfNeeded(ref mobileGraphic);
 
@@ -418,9 +377,7 @@ namespace ClassicUO.Game.UI.Controls
                         );
                     }
                     else
-                    {
                         animID = data.Gump;
-                    }
                 }
             }
 
@@ -438,18 +395,16 @@ namespace ClassicUO.Game.UI.Controls
             }
 
             _ = IsAnimExistsInGump(animID, ref offset, isfemale);
-
             return (ushort)(animID + offset);
         }
 
         private static bool IsAnimExistsInGump(ushort animID, ref int offset, bool isFemale)
         {
             if (
-                    animID + offset > GumpsLoader.MAX_GUMP_DATA_INDEX_COUNT
-                    || Client.Game.UO.Gumps.GetGump((ushort)(animID + offset)).Texture == null
-                )
+                animID + offset > GumpsLoader.MAX_GUMP_DATA_INDEX_COUNT
+                || Client.Game.UO.Gumps.GetGump((ushort)(animID + offset)).Texture == null
+            )
             {
-                // inverse
                 offset = isFemale ? Constants.MALE_GUMP_OFFSET : Constants.FEMALE_GUMP_OFFSET;
             }
 
@@ -458,7 +413,6 @@ namespace ClassicUO.Game.UI.Controls
                 Log.Error(
                     $"Texture not found in paperdoll: gump_graphic: {(ushort)(animID + offset)}"
                 );
-
                 return false;
             }
 
@@ -486,9 +440,7 @@ namespace ClassicUO.Game.UI.Controls
                 _layer = layer;
 
                 if (SerialHelper.IsValid(serial) && _gump.World.InGame)
-                {
                     SetTooltip(serial);
-                }
             }
 
             public bool CanLift { get; set; }
@@ -496,15 +448,10 @@ namespace ClassicUO.Game.UI.Controls
             protected override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
             {
                 if (button != MouseButtonType.Left)
-                {
                     return false;
-                }
 
-                // this check is necessary to avoid crashes during character creation
                 if (_gump.World.InGame)
-                {
                     GameActions.DoubleClick(_gump.World, LocalSerial);
-                }
 
                 return true;
             }
@@ -538,9 +485,7 @@ namespace ClassicUO.Game.UI.Controls
                         GameActions.PickUp(_gump.World, LocalSerial, 0, 0);
 
                         if (_layer == Layer.OneHanded || _layer == Layer.TwoHanded)
-                        {
                             _gump.World.Player.UpdateAbilities();
-                        }
                     }
                     else if (MouseIsOver)
                     {

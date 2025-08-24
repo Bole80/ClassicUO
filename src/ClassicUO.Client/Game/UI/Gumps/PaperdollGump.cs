@@ -19,13 +19,13 @@ namespace ClassicUO.Game.UI.Gumps
 {
     internal class PaperDollGump : TextContainerGump
     {
+        private const float PAPERDOLL_SCALE = 2f; // Skalierungsfaktor für Grundbild + Buttons
+
         private static readonly ushort[] PeaceModeBtnGumps = { 0x07e5, 0x07e6, 0x07e7 };
         private static readonly ushort[] WarModeBtnGumps = { 0x07e8, 0x07e9, 0x07ea };
-        private GumpPic _combatBook,
-            _racialAbilitiesBook;
+        private GumpPic _combatBook, _racialAbilitiesBook;
         private HitBox _hitBox;
-        private bool _isWarMode,
-            _isMinimized;
+        private bool _isWarMode, _isMinimized;
 
         private PaperDollInteractable _paperDollInteractable;
         private GumpPic _partyManifestPic;
@@ -66,9 +66,7 @@ namespace ClassicUO.Game.UI.Gumps
                         : (ushort)(0x07d0 + (LocalSerial == World.Player ? 0 : 1));
 
                     foreach (Control c in Children)
-                    {
                         c.IsVisible = !value;
-                    }
 
                     _picBase.IsVisible = true;
                     WantUpdateSize = true;
@@ -85,14 +83,10 @@ namespace ClassicUO.Game.UI.Gumps
             if (LocalSerial == World.Player)
             {
                 if (_virtueMenuPic != null)
-                {
                     _virtueMenuPic.MouseDoubleClick -= VirtueMenu_MouseDoubleClickEvent;
-                }
 
                 if (_partyManifestPic != null)
-                {
                     _partyManifestPic.MouseDoubleClick -= PartyManifest_MouseDoubleClickEvent;
-                }
             }
 
             Clear();
@@ -102,10 +96,10 @@ namespace ClassicUO.Game.UI.Gumps
         private void _hitBox_MouseUp(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtonType.Left && !IsMinimized)
-            {
                 IsMinimized = true;
-            }
         }
+
+        private int S(float v) => (int)(v * PAPERDOLL_SCALE);
 
         private void BuildGump()
         {
@@ -119,205 +113,122 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (LocalSerial == World.Player)
             {
-                Add(_picBase = new GumpPic(0, 0, 0x07d0, 0));
+                Add(_picBase = new GumpPic(0, 0, 0x07d0, 0) { Scale = PAPERDOLL_SCALE });
                 _picBase.MouseDoubleClick += _picBase_MouseDoubleClick;
 
-                //HELP BUTTON
-                Add(
-                    new Button((int)Buttons.Help, 0x07ef, 0x07f0, 0x07f1)
-                    {
-                        X = 185,
-                        Y = 44 + 27 * 0,
-                        ButtonAction = ButtonAction.Activate
-                    }
-                );
-
-                //OPTIONS BUTTON
-                Add(
-                    new Button((int)Buttons.Options, 0x07d6, 0x07d7, 0x07d8)
-                    {
-                        X = 185,
-                        Y = 44 + 27 * 1,
-                        ButtonAction = ButtonAction.Activate
-                    }
-                );
-
-                // LOG OUT BUTTON
-                Add(
-                    new Button((int)Buttons.LogOut, 0x07d9, 0x07da, 0x07db)
-                    {
-                        X = 185,
-                        Y = 44 + 27 * 2,
-                        ButtonAction = ButtonAction.Activate
-                    }
-                );
+                // HELP
+                AddButtonScaled(Buttons.Help, 0x07ef, 0x07f0, 0x07f1, 185, 44 + 27 * 0);
+                // OPTIONS
+                AddButtonScaled(Buttons.Options, 0x07d6, 0x07d7, 0x07d8, 185, 44 + 27 * 1);
+                // LOGOUT
+                AddButtonScaled(Buttons.LogOut, 0x07d9, 0x07da, 0x07db, 185, 44 + 27 * 2);
 
                 if (Client.Game.UO.Version < ClientVersion.CV_500A)
-                {
-                    // JOURNAL BUTTON
-                    Add(
-                        new Button((int)Buttons.Journal, 0x7dc, 0x7dd, 0x7de)
-                        {
-                            X = 185,
-                            Y = 44 + 27 * 3,
-                            ButtonAction = ButtonAction.Activate
-                        }
-                    );
-                }
+                    AddButtonScaled(Buttons.Journal, 0x7dc, 0x7dd, 0x7de, 185, 44 + 27 * 3);
                 else
-                {
-                    // QUESTS BUTTON
-                    Add(
-                        new Button((int)Buttons.Quests, 0x57b5, 0x57b7, 0x57b6)
-                        {
-                            X = 185,
-                            Y = 44 + 27 * 3,
-                            ButtonAction = ButtonAction.Activate
-                        }
-                    );
-                }
+                    AddButtonScaled(Buttons.Quests, 0x57b5, 0x57b7, 0x57b6, 185, 44 + 27 * 3);
 
-                // SKILLS BUTTON
-                Add(
-                    new Button((int)Buttons.Skills, 0x07df, 0x07e0, 0x07e1)
-                    {
-                        X = 185,
-                        Y = 44 + 27 * 4,
-                        ButtonAction = ButtonAction.Activate
-                    }
-                );
+                // SKILLS
+                AddButtonScaled(Buttons.Skills, 0x07df, 0x07e0, 0x07e1, 185, 44 + 27 * 4);
+                // GUILD
+                AddButtonScaled(Buttons.Guild, 0x57b2, 0x57b4, 0x57b3, 185, 44 + 27 * 5);
 
-                // GUILD BUTTON
-                Add(
-                    new Button((int)Buttons.Guild, 0x57b2, 0x57b4, 0x57b3)
-                    {
-                        X = 185,
-                        Y = 44 + 27 * 5,
-                        ButtonAction = ButtonAction.Activate
-                    }
-                );
-
-                // TOGGLE PEACE/WAR BUTTON
                 Mobile mobile = World.Mobiles.Get(LocalSerial);
-
                 _isWarMode = mobile?.InWarMode ?? false;
                 ushort[] btngumps = _isWarMode ? WarModeBtnGumps : PeaceModeBtnGumps;
 
-                Add(
-                    _warModeBtn = new Button(
-                        (int)Buttons.PeaceWarToggle,
-                        btngumps[0],
-                        btngumps[1],
-                        btngumps[2]
-                    )
-                    {
-                        X = 185,
-                        Y = 44 + 27 * 6,
-                        ButtonAction = ButtonAction.Activate
-                    }
-                );
+                _warModeBtn = CreateButton(Buttons.PeaceWarToggle, btngumps[0], btngumps[1], btngumps[2]);
+                _warModeBtn.X = S(185);
+                _warModeBtn.Y = S(44 + 27 * 6);
+                _warModeBtn.Scale = PAPERDOLL_SCALE;
+                Add(_warModeBtn);
 
                 int profileX = 25;
                 const int SCROLLS_STEP = 14;
+                if (showRacialAbilitiesBook) profileX += SCROLLS_STEP;
 
-                if (showRacialAbilitiesBook)
-                {
-                    profileX += SCROLLS_STEP;
-                }
-
-                Add(_profilePic = new GumpPic(profileX, 196, 0x07D2, 0));
+                Add(_profilePic = new GumpPic(S(profileX), S(196), 0x07D2, 0) { Scale = PAPERDOLL_SCALE });
                 _profilePic.MouseDoubleClick += Profile_MouseDoubleClickEvent;
 
                 profileX += SCROLLS_STEP;
-
-                Add(_partyManifestPic = new GumpPic(profileX, 196, 0x07D2, 0));
+                Add(_partyManifestPic = new GumpPic(S(profileX), S(196), 0x07D2, 0) { Scale = PAPERDOLL_SCALE });
                 _partyManifestPic.MouseDoubleClick += PartyManifest_MouseDoubleClickEvent;
 
-                _hitBox = new HitBox(228, 260, 16, 16);
+                _hitBox = new HitBox(S(228), S(260), S(16), S(16));
                 _hitBox.MouseUp += _hitBox_MouseUp;
-
                 Add(_hitBox);
             }
             else
             {
-                Add(_picBase = new GumpPic(0, 0, 0x07d1, 0));
-                Add(_profilePic = new GumpPic(25, 196, 0x07D2, 0));
+                Add(_picBase = new GumpPic(0, 0, 0x07d1, 0) { Scale = PAPERDOLL_SCALE });
+                Add(_profilePic = new GumpPic(S(25), S(196), 0x07D2, 0) { Scale = PAPERDOLL_SCALE });
                 _profilePic.MouseDoubleClick += Profile_MouseDoubleClickEvent;
             }
 
-            // STATUS BUTTON
-            Add(
-                new Button((int)Buttons.Status, 0x07eb, 0x07ec, 0x07ed)
-                {
-                    X = 185,
-                    Y = 44 + 27 * 7,
-                    ButtonAction = ButtonAction.Activate
-                }
-            );
+            // STATUS
+            AddButtonScaled(Buttons.Status, 0x07eb, 0x07ec, 0x07ed, 185, 44 + 27 * 7);
 
             // Virtue menu
-            Add(_virtueMenuPic = new GumpPic(80, 4, 0x0071, 0));
+            Add(_virtueMenuPic = new GumpPic(S(80), S(4), 0x0071, 0) { Scale = PAPERDOLL_SCALE });
             _virtueMenuPic.MouseDoubleClick += VirtueMenu_MouseDoubleClickEvent;
 
-            // Equipment slots for hat/earrings/neck/ring/bracelet
+            // Equipment slots (nicht skaliert – bewusst unverändert)
             Add(_slots[0] = new EquipmentSlot(0, 2, 75, Layer.Helmet, this));
-
             Add(_slots[1] = new EquipmentSlot(0, 2, 75 + 21, Layer.Earrings, this));
-
             Add(_slots[2] = new EquipmentSlot(0, 2, 75 + 21 * 2, Layer.Necklace, this));
-
             Add(_slots[3] = new EquipmentSlot(0, 2, 75 + 21 * 3, Layer.Ring, this));
-
             Add(_slots[4] = new EquipmentSlot(0, 2, 75 + 21 * 4, Layer.Bracelet, this));
-
             Add(_slots[5] = new EquipmentSlot(0, 2, 75 + 21 * 5, Layer.Tunic, this));
 
-            // Paperdoll control!
-            _paperDollInteractable = new PaperDollInteractable(8, 19, LocalSerial, this);
+            // Paperdoll (Figur) wurde bereits separat skaliert (PaperDollInteractable)
+            _paperDollInteractable = new PaperDollInteractable(S(8), S(19), LocalSerial, this);
             Add(_paperDollInteractable);
 
             if (showPaperdollBooks)
             {
-                Add(_combatBook = new GumpPic(156, 200, 0x2B34, 0));
-                _combatBook.MouseDoubleClick += (sender, e) =>
-                {
-                    GameActions.OpenAbilitiesBook(World);
-                };
+                Add(_combatBook = new GumpPic(S(156), S(200), 0x2B34, 0) { Scale = PAPERDOLL_SCALE });
+                _combatBook.MouseDoubleClick += (sender, e) => { GameActions.OpenAbilitiesBook(World); };
 
                 if (showRacialAbilitiesBook)
                 {
-                    Add(_racialAbilitiesBook = new GumpPic(23, 200, 0x2B28, 0));
-
+                    Add(_racialAbilitiesBook = new GumpPic(S(23), S(200), 0x2B28, 0) { Scale = PAPERDOLL_SCALE });
                     _racialAbilitiesBook.MouseDoubleClick += (sender, e) =>
                     {
                         if (UIManager.GetGump<RacialAbilitiesBookGump>() == null)
-                        {
                             UIManager.Add(new RacialAbilitiesBookGump(World, 100, 100));
-                        }
                     };
                 }
             }
 
-            // Name and title
-            _titleLabel = new Label("", false, 0x0386, 185, font: 1) { X = 39, Y = 262 };
-
+            _titleLabel = new Label("", false, 0x0386, 185, font: 1)
+            {
+                X = S(39),
+                Y = S(262)
+            };
             Add(_titleLabel);
 
             RequestUpdateContents();
         }
 
+        private Button CreateButton(Buttons b, ushort n, ushort p, ushort o)
+            => new Button((int)b, n, p, o) { ButtonAction = ButtonAction.Activate };
+
+        private void AddButtonScaled(Buttons id, ushort n, ushort p, ushort o, int ox, int oy)
+        {
+            var btn = CreateButton(id, n, p, o);
+            btn.X = S(ox);
+            btn.Y = S(oy);
+            btn.Scale = PAPERDOLL_SCALE;
+            Add(btn);
+        }
+
         private void _picBase_MouseDoubleClick(object sender, MouseDoubleClickEventArgs e)
         {
             if (e.Button == MouseButtonType.Left && IsMinimized)
-            {
                 IsMinimized = false;
-            }
         }
 
-        public void UpdateTitle(string text)
-        {
-            _titleLabel.Text = text;
-        }
+        public void UpdateTitle(string text) => _titleLabel.Text = text;
 
         private void VirtueMenu_MouseDoubleClickEvent(object sender, MouseDoubleClickEventArgs args)
         {
@@ -336,20 +247,14 @@ namespace ClassicUO.Game.UI.Gumps
         private void Profile_MouseDoubleClickEvent(object o, MouseDoubleClickEventArgs args)
         {
             if (args.Button == MouseButtonType.Left)
-            {
                 GameActions.RequestProfile(LocalSerial);
-            }
         }
 
-        private void PartyManifest_MouseDoubleClickEvent(
-            object sender,
-            MouseDoubleClickEventArgs args
-        )
+        private void PartyManifest_MouseDoubleClickEvent(object sender, MouseDoubleClickEventArgs args)
         {
             if (args.Button == MouseButtonType.Left)
             {
                 PartyGump party = UIManager.GetGump<PartyGump>();
-
                 if (party == null)
                 {
                     int x = Client.Game.Window.ClientBounds.Width / 2 - 272;
@@ -357,9 +262,7 @@ namespace ClassicUO.Game.UI.Gumps
                     UIManager.Add(new PartyGump(World, x, y, World.Party.CanLoot));
                 }
                 else
-                {
                     party.BringOnTop();
-                }
             }
         }
 

@@ -23,9 +23,12 @@ namespace ClassicUO.Game.UI.Controls
         private readonly string _caption;
         private bool _entered;
         private readonly RenderedText[] _fontTexture;
-        private ushort _normal,
-            _pressed,
-            _over;
+        private ushort _normal, _pressed, _over;
+
+        // Skalierung
+        private float _scale = 1f;
+        private int _baseWidth;
+        private int _baseHeight;
 
         public Button(
             int buttonID,
@@ -48,21 +51,21 @@ namespace ClassicUO.Game.UI.Controls
             if (gumpInfo.Texture == null)
             {
                 Dispose();
-
                 return;
             }
 
             Width = gumpInfo.UV.Width;
             Height = gumpInfo.UV.Height;
+            _baseWidth = Width;
+            _baseHeight = Height;
+
             FontHue = normalHue == ushort.MaxValue ? (ushort)0 : normalHue;
             HueHover = hoverHue == ushort.MaxValue ? normalHue : hoverHue;
 
             if (!string.IsNullOrEmpty(caption) && normalHue != ushort.MaxValue)
             {
                 _fontTexture = new RenderedText[2];
-
                 _caption = caption;
-
                 _fontTexture[0] = RenderedText.Create(caption, FontHue, font, isunicode);
 
                 if (hoverHue != ushort.MaxValue)
@@ -73,7 +76,6 @@ namespace ClassicUO.Game.UI.Controls
 
             CanMove = false;
             AcceptMouseInput = true;
-            //CanCloseWithRightClick = false;
             CanCloseWithEsc = false;
         }
 
@@ -90,7 +92,6 @@ namespace ClassicUO.Game.UI.Controls
             if (parts.Count >= 6)
             {
                 int action = int.Parse(parts[5]);
-
                 ButtonAction = action == 0 ? ButtonAction.SwitchPage : ButtonAction.Activate;
             }
 
@@ -101,14 +102,35 @@ namespace ClassicUO.Game.UI.Controls
         }
 
         public bool IsClicked { get; set; }
-
         public int ButtonID { get; }
-
         public ButtonAction ButtonAction { get; set; }
-
         public int ToPage { get; set; }
-
         public override ClickPriority Priority => ClickPriority.High;
+        public int Hue { get; set; }
+        public ushort FontHue { get; }
+        public ushort HueHover { get; }
+        public bool FontCenter { get; set; }
+        public bool ContainsByBounds { get; set; }
+
+        public float Scale
+        {
+            get => _scale;
+            set
+            {
+                if (value <= 0f) value = 1f;
+                if (_scale != value)
+                {
+                    _scale = value;
+                    ApplyScale();
+                }
+            }
+        }
+
+        private void ApplyScale()
+        {
+            Width = (int)(_baseWidth * _scale);
+            Height = (int)(_baseHeight * _scale);
+        }
 
         public ushort ButtonGraphicNormal
         {
@@ -116,11 +138,10 @@ namespace ClassicUO.Game.UI.Controls
             set
             {
                 _normal = value;
-
                 ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(value);
-
-                Width = gumpInfo.UV.Width;
-                Height = gumpInfo.UV.Height;
+                _baseWidth = gumpInfo.UV.Width;
+                _baseHeight = gumpInfo.UV.Height;
+                ApplyScale();
             }
         }
 
@@ -130,11 +151,10 @@ namespace ClassicUO.Game.UI.Controls
             set
             {
                 _pressed = value;
-
                 ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(value);
-
-                Width = gumpInfo.UV.Width;
-                Height = gumpInfo.UV.Height;
+                _baseWidth = gumpInfo.UV.Width;
+                _baseHeight = gumpInfo.UV.Height;
+                ApplyScale();
             }
         }
 
@@ -144,32 +164,15 @@ namespace ClassicUO.Game.UI.Controls
             set
             {
                 _over = value;
-
                 ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(value);
-
-                Width = gumpInfo.UV.Width;
-                Height = gumpInfo.UV.Height;
+                _baseWidth = gumpInfo.UV.Width;
+                _baseHeight = gumpInfo.UV.Height;
+                ApplyScale();
             }
         }
 
-        public int Hue { get; set; }
-        public ushort FontHue { get; }
-
-        public ushort HueHover { get; }
-
-        public bool FontCenter { get; set; }
-
-        public bool ContainsByBounds { get; set; }
-
-        protected override void OnMouseEnter(int x, int y)
-        {
-            _entered = true;
-        }
-
-        protected override void OnMouseExit(int x, int y)
-        {
-            _entered = false;
-        }
+        protected override void OnMouseEnter(int x, int y) => _entered = true;
+        protected override void OnMouseExit(int x, int y) => _entered = false;
 
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
         {
@@ -201,9 +204,7 @@ namespace ClassicUO.Game.UI.Controls
             }
 
             if (texture == null)
-            {
                 return false;
-            }
 
             var hue = ShaderHueTranslator.GetHueVector(Hue, false, Alpha, true);
 
@@ -211,12 +212,10 @@ namespace ClassicUO.Game.UI.Controls
 
             if (!string.IsNullOrEmpty(_caption))
             {
-                RenderedText textTexture = _fontTexture[_entered ? 1 : 0];
-
+                RenderedText textTexture = _fontTexture[_entered && _fontTexture.Length > 1 ? 1 : 0];
+                int yoffset = IsClicked ? 1 : 0;
                 if (FontCenter)
                 {
-                    int yoffset = IsClicked ? 1 : 0;
-
                     textTexture.Draw(
                         batcher,
                         x + ((Width - textTexture.Width) >> 1),
@@ -225,7 +224,7 @@ namespace ClassicUO.Game.UI.Controls
                 }
                 else
                 {
-                    textTexture.Draw(batcher, x, y);
+                    textTexture.Draw(batcher, x, y + yoffset);
                 }
             }
 
@@ -234,54 +233,51 @@ namespace ClassicUO.Game.UI.Controls
 
         protected override void OnMouseDown(int x, int y, MouseButtonType button)
         {
-            if (button == MouseButtonType.Left)
-            {
-                IsClicked = true;
-            }
+            if (button == MouseButtonType.Left) IsClicked = true;
         }
 
         protected override void OnMouseUp(int x, int y, MouseButtonType button)
         {
-            if (button == MouseButtonType.Left)
+            if (button != MouseButtonType.Left) return;
+
+            IsClicked = false;
+
+            if (!MouseIsOver) return;
+
+            if (_entered || Client.Game.Scene is GameScene)
             {
-                IsClicked = false;
-
-                if (!MouseIsOver)
+                switch (ButtonAction)
                 {
-                    return;
+                    case ButtonAction.SwitchPage:
+                        ChangePage(ToPage);
+                        break;
+                    case ButtonAction.Activate:
+                        OnButtonClick(ButtonID);
+                        break;
                 }
 
-                if (_entered || Client.Game.Scene is GameScene)
-                {
-                    switch (ButtonAction)
-                    {
-                        case ButtonAction.SwitchPage:
-                            ChangePage(ToPage);
-
-                            break;
-
-                        case ButtonAction.Activate:
-                            OnButtonClick(ButtonID);
-
-                            break;
-                    }
-
-                    Mouse.LastLeftButtonClickTime = 0;
-                    Mouse.CancelDoubleClick = true;
-                }
+                Mouse.LastLeftButtonClickTime = 0;
+                Mouse.CancelDoubleClick = true;
             }
         }
 
         public override bool Contains(int x, int y)
         {
             if (IsDisposed)
-            {
                 return false;
+
+            if (ContainsByBounds)
+                return base.Contains(x, y);
+
+            // Für PixelCheck Koordinaten auf unskalierte Größe zurückrechnen
+            if (_scale != 1f && _baseWidth > 0 && _baseHeight > 0)
+            {
+                int unscaledX = (int)(x / _scale);
+                int unscaledY = (int)(y / _scale);
+                return Client.Game.UO.Gumps.PixelCheck(_normal, unscaledX - Offset.X, unscaledY - Offset.Y);
             }
 
-            return ContainsByBounds
-                ? base.Contains(x, y)
-                : Client.Game.UO.Gumps.PixelCheck(_normal, x - Offset.X, y - Offset.Y);
+            return Client.Game.UO.Gumps.PixelCheck(_normal, x - Offset.X, y - Offset.Y);
         }
 
         public sealed override void Dispose()
@@ -293,7 +289,6 @@ namespace ClassicUO.Game.UI.Controls
                     t?.Destroy();
                 }
             }
-
             base.Dispose();
         }
     }
