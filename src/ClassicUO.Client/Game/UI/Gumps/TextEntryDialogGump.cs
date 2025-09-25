@@ -119,6 +119,17 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
+        // Neu: Enter bestätigt wie "OK"
+        public override void OnKeyboardReturn(int textID, string text)
+        {
+            NetClient.Socket.Send_TextEntryDialogResponse(LocalSerial,
+                                                          ParentID,
+                                                          ButtonID,
+                                                          text,
+                                                          true);
+            Dispose();
+        }
+
         private enum ButtonType
         {
             Ok,
