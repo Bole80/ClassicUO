@@ -36,7 +36,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         //experimental
         private Checkbox _autoOpenDoors, _autoOpenCorpse, _skipEmptyCorpse, _disableTabBtn, _disableCtrlQWBtn, _disableDefaultHotkeys, _disableArrowBtn, _disableAutoMove, _overrideContainerLocation, _smoothDoors, _showTargetRangeIndicator, _customBars, _customBarsBBG, _saveHealthbars;
-        private HSliderBar _cellSize;
+        private HSliderBar _cellSize, _paperDollScale;
         private Checkbox _containerScaleItems, _containerDoubleClickToLoot, _relativeDragAnDropItems, _useLargeContianersGumps, _highlightContainersWhenMouseIsOver;
 
 
@@ -3147,6 +3147,19 @@ namespace ClassicUO.Game.UI.Gumps
 
             startY += _disableAutoMove.Height + 2;
 
+            // Paperdoll scale
+            rightArea.Add(new Label("Paperdoll scale", true, HUE_FONT) { X = startX, Y = startY });
+            _paperDollScale = AddHSlider(
+                rightArea,
+                100,
+                200,
+                _currentProfile.PaperDollScalePercent,
+                startX + 150,
+                startY,
+                200
+            );
+            startY += _paperDollScale.Height + 10;
+
             Add(rightArea, PAGE);
         }
 
@@ -3729,12 +3742,13 @@ namespace ClassicUO.Game.UI.Gumps
                     break;
 
                 case 12: // experimental
-
                     _disableDefaultHotkeys.IsChecked = false;
                     _disableArrowBtn.IsChecked = false;
                     _disableTabBtn.IsChecked = false;
                     _disableCtrlQWBtn.IsChecked = false;
                     _disableAutoMove.IsChecked = false;
+
+                    if (_paperDollScale != null) _paperDollScale.Value = 200;
 
                     break;
             }
@@ -4292,6 +4306,7 @@ namespace ClassicUO.Game.UI.Gumps
                 GameActions.DoubleClick(World, backpack);
             }
 
+            _currentProfile.PaperDollScalePercent = _paperDollScale.Value;
 
             // tooltip
             _currentProfile.UseTooltip = _use_tooltip.IsChecked;

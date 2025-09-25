@@ -19,7 +19,9 @@ namespace ClassicUO.Game.UI.Gumps
 {
     internal class PaperDollGump : TextContainerGump
     {
-        private const float PAPERDOLL_SCALE = 2f; // Skalierungsfaktor für Grundbild + Buttons
+        //private const float PAPERDOLL_SCALE = 2; // Skalierungsfaktor für Grundbild + Buttons
+        private static float PAPERDOLL_SCALE =>
+            (ProfileManager.CurrentProfile?.PaperDollScalePercent ?? 200) / 100f;
 
         private static readonly ushort[] PeaceModeBtnGumps = { 0x07e5, 0x07e6, 0x07e7 };
         private static readonly ushort[] WarModeBtnGumps = { 0x07e8, 0x07e9, 0x07ea };
