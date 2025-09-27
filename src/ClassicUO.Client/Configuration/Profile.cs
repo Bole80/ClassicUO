@@ -215,7 +215,7 @@ namespace ClassicUO.Configuration
         public int InfoBarHighlightType { get; set; } // 0 = text colour changes, 1 = underline
 
         // ... innerhalb der Klasse Profile (nahe anderer Prozent-/Scale-Werte) einfügen:
-        public int PaperDollScalePercent { get; set; } = 200;
+        public int PaperDollScalePercent { get; set; } = 100;
 
         public bool CounterBarEnabled { get; set; }
         public bool CounterBarHighlightOnUse { get; set; }
