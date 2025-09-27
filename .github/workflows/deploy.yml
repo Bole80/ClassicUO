@@ -33,10 +33,10 @@ jobs:
         include:
           - os: windows-latest
             target: win-x64
-          - os: ubuntu-22.04
-            target: linux-x64
-          - os: macos-13
-            target: osx-x64
+         # - os: ubuntu-22.04
+         #   target: linux-x64
+         # - os: macos-13
+         #   target: osx-x64
 
     steps:
       - uses: actions/checkout@v4
