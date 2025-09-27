@@ -3763,6 +3763,38 @@ namespace ClassicUO.Network
             int x = (int)p.ReadUInt32BE();
             int y = (int)p.ReadUInt32BE();
 
+            // -- BEGIN (0,0) Fix -------------------------------------------------
+           if (sender == 0 && gumpID == 0)
+            {
+                /*
+                List<Gump> toDispose = null;
+                for (var node = UIManager.Gumps.First; node != null; node = node.Next)
+                {
+                    if (!node.Value.IsDisposed
+                        && node.Value.IsFromServer
+                        && node.Value.ServerSerial == 0
+                        && node.Value.LocalSerial == 0
+                        && node.Value is Gump g)
+                    {
+                        (toDispose ??= new List<Gump>()).Add(g);
+                    }
+                }
+
+                if (toDispose != null)
+                {
+                    foreach (var g in toDispose)
+                    {
+                        // Position optional nicht speichern, da keine stabile ID existiert
+                        g.Dispose();
+                    }
+                }
+                */
+
+                sender = 0xFFFF_FFFF; // Markierung für anonymen Gump
+                gumpID = 0xFFFF_FFFF;
+            }
+            // -- END Fix ---------------------------------------------------------
+
             ushort cmdLen = p.ReadUInt16BE();
             string cmd = p.ReadASCII(cmdLen);
 
