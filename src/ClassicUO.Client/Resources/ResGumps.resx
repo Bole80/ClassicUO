@@ -669,6 +669,9 @@ when amount is or exceeds</value>
   <data name="DisableClickAutomove" xml:space="preserve">
     <value>Disable Right+Left Click Automove</value>
   </data>
+  <data name="ShowJournalTimestamps" xml:space="preserve">
+    <value>Zeitstempel im Journal anzeigen</value>
+  </data>
   <data name="ShowInfoBar" xml:space="preserve">
     <value>Show Info Bar</value>
   </data>

@@ -216,6 +216,7 @@ namespace ClassicUO.Configuration
 
         // ... innerhalb der Klasse Profile (nahe anderer Prozent-/Scale-Werte) einfügen:
         public int PaperDollScalePercent { get; set; } = 100;
+        public bool ShowJournalTimestamps { get; set; } = true;
 
         public bool CounterBarEnabled { get; set; }
         public bool CounterBarHighlightOnUse { get; set; }

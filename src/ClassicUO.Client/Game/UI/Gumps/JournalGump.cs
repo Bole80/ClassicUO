@@ -25,6 +25,7 @@ namespace ClassicUO.Game.UI.Gumps
         private bool _isMinimized;
         private readonly RenderedTextList _journalEntries;
         private readonly ScrollFlag _scrollBar;
+        private static bool ShowTimestamps => ProfileManager.CurrentProfile?.ShowJournalTimestamps ?? true;
 
         public JournalGump(World world) : base(world, 0, 0)
         {
@@ -273,6 +274,20 @@ namespace ClassicUO.Game.UI.Gumps
                 return;
 
             string text = $"{usrSend}: {entry.Text}";
+
+            if (usrSend == "System")
+                     {
+                text = $" {entry.Text}";
+            }
+            else if (usrSend == "Siebenwind")
+            {
+                text = $"Gesehen: {entry.Text}";
+            }
+            else
+            {
+                text = $"{usrSend}: {entry.Text}";
+            }
+            
 
             if (string.IsNullOrEmpty(usrSend))
             {
@@ -535,7 +550,11 @@ namespace ClassicUO.Game.UI.Gumps
                     _text_types.RemoveFromFront();
                 }
 
-                RenderedText h = RenderedText.Create
+                
+
+                if (ShowTimestamps)
+                {
+                    RenderedText h = RenderedText.Create
                 (
                     $"{time:t} ",
                     1150,
@@ -543,29 +562,63 @@ namespace ClassicUO.Game.UI.Gumps
                     true,
                     FontStyle.BlackBorder
                 );
+                    _hours.AddToBack(h);
 
-                _hours.AddToBack(h);
+                    RenderedText rtext = RenderedText.Create
+                    (
+                        text,
+                        hue,
+                        (byte)font,
+                        isUnicode,
+                        FontStyle.Indention | FontStyle.BlackBorder,
+                        maxWidth: Width - (18 + h.Width)
+                    );
+                    _entries.AddToBack(rtext);
 
-                RenderedText rtext = RenderedText.Create
-                (
-                    text,
-                    hue,
-                    (byte) font,
-                    isUnicode,
-                    FontStyle.Indention | FontStyle.BlackBorder,
-                    maxWidth: Width - (18 + h.Width)
-                );
+                    _text_types.AddToBack(text_type);
 
-                _entries.AddToBack(rtext);
+                    _scrollBar.MaxValue += rtext.Height;
 
-                _text_types.AddToBack(text_type);
-
-                _scrollBar.MaxValue += rtext.Height;
-
-                if (maxScroll)
-                {
-                    _scrollBar.Value = _scrollBar.MaxValue;
+                    if (maxScroll)
+                    {
+                        _scrollBar.Value = _scrollBar.MaxValue;
+                    }
                 }
+                else
+                {
+                    RenderedText h = RenderedText.Create
+                (
+                    string.Empty,
+                    1150,
+                    1,
+                    true,
+                    FontStyle.BlackBorder
+                );
+                    _hours.AddToBack(h);
+
+                    RenderedText rtext = RenderedText.Create
+                    (
+                        text,
+                        hue,
+                        (byte)font,
+                        isUnicode,
+                        FontStyle.Indention | FontStyle.BlackBorder,
+                        maxWidth: Width - (18 + h.Width)
+                    );
+                    _entries.AddToBack(rtext);
+
+                    _text_types.AddToBack(text_type);
+
+                    _scrollBar.MaxValue += rtext.Height;
+
+                    if (maxScroll)
+                    {
+                        _scrollBar.Value = _scrollBar.MaxValue;
+                    }
+                }
+
+               
+
             }
 
             private static bool CanBeDrawn(TextType type)

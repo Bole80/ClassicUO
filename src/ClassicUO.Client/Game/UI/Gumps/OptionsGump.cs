@@ -35,7 +35,7 @@ namespace ClassicUO.Game.UI.Gumps
         private InputField _autoOpenCorpseRange;
 
         //experimental
-        private Checkbox _autoOpenDoors, _autoOpenCorpse, _skipEmptyCorpse, _disableTabBtn, _disableCtrlQWBtn, _disableDefaultHotkeys, _disableArrowBtn, _disableAutoMove, _overrideContainerLocation, _smoothDoors, _showTargetRangeIndicator, _customBars, _customBarsBBG, _saveHealthbars;
+        private Checkbox _autoOpenDoors, _autoOpenCorpse, _skipEmptyCorpse, _disableTabBtn, _disableCtrlQWBtn, _disableDefaultHotkeys, _disableArrowBtn, _disableAutoMove, _overrideContainerLocation, _smoothDoors, _showTargetRangeIndicator, _customBars, _customBarsBBG, _saveHealthbars, _showJournalTimestamps;
         private HSliderBar _cellSize, _paperDollScale;
         private Checkbox _containerScaleItems, _containerDoubleClickToLoot, _relativeDragAnDropItems, _useLargeContianersGumps, _highlightContainersWhenMouseIsOver;
 
@@ -3147,8 +3147,19 @@ namespace ClassicUO.Game.UI.Gumps
 
             startY += _disableAutoMove.Height + 2;
 
+            startX = 5;
+            startY += 20;
+
+            DataBox box = new DataBox(startX, startY, rightArea.Width - 15, 1);
+            box.WantUpdateSize = true;
+            rightArea.Add(box);
+
+            SettingsSection section = AddSettingsSection(box, "Siebenwind");
+
+            startY += 25;
+
             // Paperdoll scale
-            rightArea.Add(new Label("Paperdoll scale", true, HUE_FONT) { X = startX, Y = startY });
+            rightArea.Add(new Label("- Paperdoll Skalierung", true, HUE_FONT) { X = startX, Y = startY });
             _paperDollScale = AddHSlider(
                 rightArea,
                 100,
@@ -3160,8 +3171,20 @@ namespace ClassicUO.Game.UI.Gumps
             );
             startY += _paperDollScale.Height + 10;
 
+            _showJournalTimestamps = AddCheckBox
+            (
+                rightArea,
+                ResGumps.ShowJournalTimestamps,
+                _currentProfile.ShowJournalTimestamps,
+                startX,
+                startY
+            );
+
+            startY += _showJournalTimestamps.Height + 2;
+
             Add(rightArea, PAGE);
         }
+
 
 
         private void BuildInfoBar()
@@ -3747,6 +3770,7 @@ namespace ClassicUO.Game.UI.Gumps
                     _disableTabBtn.IsChecked = false;
                     _disableCtrlQWBtn.IsChecked = false;
                     _disableAutoMove.IsChecked = false;
+                    _showJournalTimestamps.IsChecked = true;
 
                     if (_paperDollScale != null) _paperDollScale.Value = 200;
 
@@ -4179,6 +4203,7 @@ namespace ClassicUO.Game.UI.Gumps
             _currentProfile.DisableTabBtn = _disableTabBtn.IsChecked;
             _currentProfile.DisableCtrlQWBtn = _disableCtrlQWBtn.IsChecked;
             _currentProfile.DisableAutoMove = _disableAutoMove.IsChecked;
+            _currentProfile.ShowJournalTimestamps = _showJournalTimestamps.IsChecked;
             _currentProfile.AutoOpenDoors = _autoOpenDoors.IsChecked;
             _currentProfile.SmoothDoors = _smoothDoors.IsChecked;
             _currentProfile.AutoOpenCorpses = _autoOpenCorpse.IsChecked;

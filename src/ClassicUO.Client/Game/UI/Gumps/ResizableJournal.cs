@@ -42,6 +42,7 @@ namespace ClassicUO.Game.UI.Gumps
         private JournalEntriesContainer _journalArea;
         private ScrollBar _scrollBarBase;
         private NiceButton _newTabButton;
+        private static bool ShowTimestamps => ProfileManager.CurrentProfile?.ShowJournalTimestamps ?? true;
         #endregion
 
         #region OTHER
@@ -341,8 +342,15 @@ namespace ClassicUO.Game.UI.Gumps
 
                         if (my + journalEntry.EntryText.Height - y >= _scrollBar.Value && my - y <= _scrollBar.Value + _scrollBar.Height)
                         {
-                            journalEntry.TimeStamp.Draw(batcher, x, my - _scrollBar.Value);
-                            journalEntry.EntryText.Draw(batcher, x + (journalEntry.TimeStamp.Width + 5), my - _scrollBar.Value);
+                            if (ShowTimestamps)
+                            {
+                                journalEntry.TimeStamp.Draw(batcher, x, my - _scrollBar.Value);
+                                journalEntry.EntryText.Draw(batcher, x + (journalEntry.TimeStamp.Width + 5), my - _scrollBar.Value);
+                            }
+                            else
+                            {
+                                journalEntry.EntryText.Draw(batcher, x, my - _scrollBar.Value);
+                            }
                         }
                         my += journalEntry.EntryText.Height;
                     }
@@ -415,10 +423,10 @@ namespace ClassicUO.Game.UI.Gumps
                     journalDatas.RemoveFromFront().Destroy();
 
                 Label timeS = new Label($"{e.Time:t}", e.IsUnicode, e.Hue, font: e.Font);
-
+                // Prefix geändert
                 journalDatas.AddToBack(
                     new JournalData(
-                        new Label($"{e.Name}: {e.Text}", e.IsUnicode, e.Hue, Width - BORDER_WIDTH - timeS.Width, font: e.Font),
+                        new Label($"{(e.Name=="System" ? "" : (e.Name=="Siebenwind" ? "Gesehen: " : e.Name+": "))}{e.Text}", e.IsUnicode, e.Hue, Width - BORDER_WIDTH - timeS.Width, font: e.Font),
                         timeS,
                         e.TextType,
                         e.MessageType
