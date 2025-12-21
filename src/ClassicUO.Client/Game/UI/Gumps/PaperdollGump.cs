@@ -345,12 +345,12 @@ namespace ClassicUO.Game.UI.Gumps
 
                 if (Client.Game.UO.GameCursor.ItemHold.Enabled)
                 {
+                    // Bisher: Ausrüstung nur erlaubt wenn CanLift || eigener Player.
+                    // Neu: Wearables dürfen auch auf NPC angezogen werden.
                     if (CanLift || LocalSerial == World.Player.Serial)
                     {
-                        if (
-                            SelectedObject.Object is Item item
-                            && (item.Layer == Layer.Backpack || item.ItemData.IsContainer)
-                        )
+                        if (SelectedObject.Object is Item item
+                            && (item.Layer == Layer.Backpack || item.ItemData.IsContainer))
                         {
                             GameActions.DropItem(
                                 Client.Game.UO.GameCursor.ItemHold.Serial,
@@ -364,7 +364,7 @@ namespace ClassicUO.Game.UI.Gumps
                         }
                         else
                         {
-                            if (Client.Game.UO.GameCursor.ItemHold.ItemData.IsWearable)
+                            if (Client.Game.UO.GameCursor.ItemHold.ItemData.IsWearable && container != null)
                             {
                                 Item equipment = container.FindItemByLayer(
                                     (Layer)Client.Game.UO.GameCursor.ItemHold.ItemData.Layer
@@ -380,6 +380,22 @@ namespace ClassicUO.Game.UI.Gumps
                             }
                         }
                     }
+                    else
+                    {
+                        // Zusatzpfad: Nur Ausrüsten erlauben (kein Zugriff auf Backpack) bei NPC.
+                        if (Client.Game.UO.GameCursor.ItemHold.ItemData.IsWearable && container != null)
+                        {
+                            Item equipment = container.FindItemByLayer(
+                                (Layer)Client.Game.UO.GameCursor.ItemHold.ItemData.Layer
+                            );
+
+                            if (equipment == null)
+                            {
+                                GameActions.Equip(World, container);
+                                Mouse.CancelDoubleClick = true;
+                            }
+                        }
+                    }
                 }
                 else if (SelectedObject.Object is Item item)
                 {
@@ -391,7 +407,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                         if (World.TargetManager.TargetingState == CursorTarget.SetTargetClientSide)
                         {
-                            UIManager.Add(new InspectorGump(World,item));
+                            UIManager.Add(new InspectorGump(World, item));
                         }
                     }
                     else if (!World.DelayedObjectClickManager.IsEnabled)
